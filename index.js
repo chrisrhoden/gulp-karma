@@ -56,7 +56,7 @@ var karmaPlugin = function(options) {
     }
   }
 
-  function startKarmaServer() {
+  function startKarmaServer(stream) {
     gutil.log('Starting Karma server...');
 
     // Start the server
@@ -72,7 +72,10 @@ var karmaPlugin = function(options) {
     );
 
     // Cleanup when the child process exits
-    child.on('exit', function() {
+    child.on('exit', function(code) {
+      if (code !== 0) {
+        stream.emit('error', new Error('Karma exited with non-zero code.'));
+      }
       // gutil.log('Karma child process ended');
       done();
     });
@@ -98,7 +101,7 @@ var karmaPlugin = function(options) {
     // Start the server
     // If options.singleRun: Server starts, tests run, task completes
     // If options.background: Server starts, tests run, files watched
-    startKarmaServer();
+    startKarmaServer(this);
   }
 
   stream = es.through(queueFile, endStream);
